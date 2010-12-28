@@ -103,7 +103,6 @@ func main() {
 
 	for _, v := range workers {
 		fmt.Println("[", v.Id, "]", string(v.Name))
-
 	}
 
 	processed, _ := r.getStat("processed")
