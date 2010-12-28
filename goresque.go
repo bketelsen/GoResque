@@ -8,12 +8,12 @@ import (
 )
 
 type Resque struct {
-	Server string
-	Port   int
-	Db     int
-	Queues []Queue
+	Server  string
+	Port    int
+	Db      int
+	Queues  []Queue
 	Workers []Worker
-	client *redis.Client
+	client  *redis.Client
 }
 
 type Queue struct {
@@ -23,12 +23,10 @@ type Queue struct {
 }
 
 type Worker struct {
-	Id	int
-	Name string
+	Id     int
+	Name   string
 	client *redis.Client
 }
-
-
 
 
 func (self *Queue) size() (int, os.Error) {
@@ -44,7 +42,7 @@ func (self *Resque) getStat(name string) (int, os.Error) {
 	return intval, err
 }
 
-func (self *Resque) getWorkers()([]Worker){
+func (self *Resque) getWorkers() []Worker {
 	workers, err := self.client.Smembers("resque:workers")
 	if err != nil {
 		fmt.Println(err)
@@ -61,7 +59,7 @@ func (self *Resque) getWorkers()([]Worker){
 }
 
 
-func (self *Resque) getQueues() ([]Queue) {
+func (self *Resque) getQueues() []Queue {
 	members, err := self.client.Smembers("resque:queues")
 	if err != nil {
 		fmt.Println(err)
@@ -84,7 +82,7 @@ func NewResque(server string, port int, db int) (resque *Resque) {
 	resque.Db = db
 	resque.client = new(redis.Client)
 	resque.Queues = make([]Queue, 0)
-	resque.Workers = make ([]Worker,0)
+	resque.Workers = make([]Worker, 0)
 	address := fmt.Sprintf("%s:%d", resque.Server, resque.Port)
 	resque.client.Addr = address
 	return resque
@@ -112,13 +110,11 @@ func main() {
 	failed, _ := r.getStat("failed")
 	pending, _ := r.getStat("pending")
 
-
 	fmt.Println("Processed:", processed)
 
-	fmt.Println("Failed:",failed)
-	fmt.Println("Pending:",pending)
-	fmt.Println("Queues:",len(queues))
-	fmt.Println("Working:",0)
-	
+	fmt.Println("Failed:", failed)
+	fmt.Println("Pending:", pending)
+	fmt.Println("Queues:", len(queues))
+	fmt.Println("Working:", 0)
 
 }
