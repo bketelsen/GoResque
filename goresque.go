@@ -84,6 +84,7 @@ func NewResque(server string, port int, db int) (resque *Resque) {
 	resque.Db = db
 	resque.client = new(redis.Client)
 	resque.Queues = make([]Queue, 0)
+	resque.Workers = make ([]Worker,0)
 	address := fmt.Sprintf("%s:%d", resque.Server, resque.Port)
 	resque.client.Addr = address
 	return resque
