@@ -7,12 +7,12 @@ import (
 	"syscall"
 )
 
-type InquirySaver struct {
+type FlavorSaver struct {
 	Id int
 }
 
 
-func (self *InquirySaver) perform(args []interface{}) os.Error {
+func (self *FlavorSaver) perform(args []interface{}) os.Error {
 	for i, val := range args {
 		fmt.Println("arg #", i, val)
 	}
@@ -27,16 +27,16 @@ func main() {
 	r := goresque.NewResque("127.0.0.1", 6379, 0)
 	for { // loop forever
 		//pop a job off the queue the easy way
-		job2, err2 := r.Reserve("inquiries")
+		job2, err2 := r.Reserve("flavors")
 		if err2 != nil {
 			fmt.Print(".")         // makes it look very Wargams-ish
-			syscall.Sleep(1000000) // this is a 1 second sleep - too long for production, I'd think
+			syscall.Sleep(1000000) // this is a .1 second sleep 
 		} else {
 			fmt.Println("return:", job2)
 
 			switch job2.Class {
-			case "InquirySaver":
-				is := new(InquirySaver)
+			case "FlavorSaver":
+				is := new(FlavorSaver)
 				is.perform(job2.Args)
 			default:
 				fmt.Println("Incorrect Class!")
