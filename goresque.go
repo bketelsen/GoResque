@@ -1,7 +1,7 @@
 package goresque
 
 import (
-    redis "clarity/drivers/redis"
+    redis "github.com/bketelsen/redis.go"
     "fmt"
     "os"
     "strconv"
