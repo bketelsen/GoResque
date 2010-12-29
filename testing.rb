@@ -6,6 +6,6 @@ class InquirySaver
   
 end
 
-100.times do
+1000.times do
   Resque.enqueue(InquirySaver,1,"blue")
 end
