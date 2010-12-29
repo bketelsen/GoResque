@@ -17,19 +17,20 @@ In Ruby/Resque, the worker code instantiates the appropriate worker class based 
 
 In Go, the worker is statically instantiated. See the main() in the example/worker.go as an example. I kept the class.perform(args) concept, so it'd look familiar to people writing both Ruby and Go workers.
 
- type FlavorSaver struct {
+* type FlavorSaver struct {
 	Id int
  }
-
- func (self *FlavorSaver) perform(args []interface{}) os.Error {
+*
+* func (self *FlavorSaver) perform(args []interface{}) os.Error {
 	for i, val := range args {
 		fmt.Println("arg #", i, val)
 	}
 	fmt.Println("I would have done something big here!")
 	return nil
  }
+*
 
- func main() {
+* func main() {
 
 	//instantiate a new Resque
 	r := goresque.NewResque("127.0.0.1", 6379, 0)
@@ -52,6 +53,7 @@ In Go, the worker is statically instantiated. See the main() in the example/work
 		}
 	}
  }
+*
 
 ## todo
 
