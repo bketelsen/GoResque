@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"json"
 )
 
 type Resque struct {
@@ -28,6 +29,38 @@ type Worker struct {
 	client *redis.Client
 }
 
+type Job struct {
+	*Queue
+	Class string
+	Args  []interface{}
+}
+
+type InquirySaver struct {
+	Id int
+}
+
+func (self *InquirySaver)perform(args []interface{})(os.Error){
+	for i,val := range args {
+		fmt.Println("arg #",i,val)
+	}
+	return nil
+}
+
+
+func (self *Queue) pop() (job *Job, err os.Error) {
+	//decode redis.lpop("queue:#{queue}")
+	key := fmt.Sprintf("resque:queue:%s", self.Name)
+	data, err := self.client.Lpop(key)
+	if err != nil {
+		return job, err
+	}
+	job = new(Job)
+	err = json.Unmarshal(data, job)
+	job.Queue = self
+	fmt.Println(job)
+	return job, err
+
+}
 
 func (self *Queue) size() (int, os.Error) {
 	key := fmt.Sprintf("resque:queue:%s", self.Name)
@@ -90,7 +123,7 @@ func NewResque(server string, port int, db int) (resque *Resque) {
 
 func main() {
 
-	r := NewResque("web6", 6379, 0)
+	r := NewResque("127.0.0.1", 6379, 0)
 
 	queues := r.getQueues()
 
@@ -99,6 +132,17 @@ func main() {
 		fmt.Println("[", v.Id, "]", string(v.Name), "(", i, " items)")
 
 	}
+	job, err := queues[2].pop()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("return:", job)
+	
+	if job.Class == "InquirySaver" {
+		is := new(InquirySaver)
+		is.perform(job.Args)
+	}
+
 	workers := r.getWorkers()
 
 	for _, v := range workers {
