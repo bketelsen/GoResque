@@ -7,5 +7,6 @@ class InquirySaver
 end
 
 1000.times do
-  Resque.enqueue(InquirySaver,1,"blue")
+  Resque.enqueue(InquirySaver,Time.now,"blue")
+  sleep(0.75)
 end

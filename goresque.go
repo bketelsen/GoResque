@@ -61,7 +61,6 @@ func (self *Resque) Reserve(queue string) (job *Job, err os.Error) {
     key := fmt.Sprintf("resque:queue:%s", queue)
     data, err := self.client.Lpop(key)
     if err != nil {
-        fmt.Println("ERR")
         return job, err
     }
     job = new(Job)
