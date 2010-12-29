@@ -29,7 +29,7 @@ func main() {
 		//pop a job off the queue the easy way
 		job2, err2 := r.Reserve("inquiries")
 		if err2 != nil {
-			fmt.Print(".") // makes it look very Wargams-ish
+			fmt.Print(".")         // makes it look very Wargams-ish
 			syscall.Sleep(1000000) // this is a 1 second sleep - too long for production, I'd think
 		} else {
 			fmt.Println("return:", job2)
