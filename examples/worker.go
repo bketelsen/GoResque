@@ -30,7 +30,7 @@ func main() {
 		job2, err2 := r.Reserve("inquiries")
 		if err2 != nil {
 			fmt.Println("No Jobs on inquiries queue")
-			syscall.Sleep(1000000000)
+			syscall.Sleep(1000000000) // this is a 1 second sleep - too long for production, I'd think
 		} else {
 			fmt.Println("return:", job2)
 
