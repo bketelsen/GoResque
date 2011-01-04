@@ -31,8 +31,9 @@ type Worker struct {
 
 type Job struct {
 	*Queue
-	Class string
-	Args  []interface{}
+	Class string "class"
+	Args  []interface{} "args"
+	Worker		*Worker
 }
 
 
@@ -46,7 +47,6 @@ func (self *Queue) pop() (job *Job, err os.Error) {
 	job = new(Job)
 	err = json.Unmarshal(data, job)
 	job.Queue = self
-	fmt.Println(job)
 	return job, err
 
 }
@@ -54,6 +54,20 @@ func (self *Queue) pop() (job *Job, err os.Error) {
 func (self *Queue) size() (int, os.Error) {
 	key := fmt.Sprintf("resque:queue:%s", self.Name)
 	return self.client.Llen(key)
+}
+
+func(self *Resque) watchQueue(queue string)(ok bool, err os.Error){
+		ok,err = self.client.Sadd("resque:queues", []byte(queue))
+		return
+}
+
+func (self *Resque) Enqueue(queue string, job *Job)(err os.Error) {
+ 	self.watchQueue(queue)
+	
+	outjson, _ := json.Marshal(job)
+	key := fmt.Sprintf("resque:queue:%s",queue)
+ 	err = self.client.Rpush(key,outjson)
+	return
 }
 
 func (self *Resque) Reserve(queue string) (job *Job, err os.Error) {
