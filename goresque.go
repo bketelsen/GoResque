@@ -10,6 +10,7 @@ import (
 
 type Resque struct {
 	Server  string
+	Namespace	string
 	Port    int
 	Db      int
 	Queues  []Queue
@@ -19,6 +20,7 @@ type Resque struct {
 
 type Queue struct {
 	Id     int
+	Namespace string
 	Name   string
 	client *redis.Client
 }
@@ -39,7 +41,7 @@ type Job struct {
 
 func (self *Queue) pop() (job *Job, err os.Error) {
 	//decode redis.lpop("queue:#{queue}")
-	key := fmt.Sprintf("resque:queue:%s", self.Name)
+	key := fmt.Sprintf("%squeue:%s", self.Namespace,self.Name)
 	data, err := self.client.Lpop(key)
 	if err != nil {
 		return job, err
@@ -52,12 +54,12 @@ func (self *Queue) pop() (job *Job, err os.Error) {
 }
 
 func (self *Queue) size() (int, os.Error) {
-	key := fmt.Sprintf("resque:queue:%s", self.Name)
+	key := fmt.Sprintf("%squeue:%s", self.Namespace,self.Name)
 	return self.client.Llen(key)
 }
 
 func(self *Resque) watchQueue(queue string)(ok bool, err os.Error){
-		ok,err = self.client.Sadd("resque:queues", []byte(queue))
+		ok,err = self.client.Sadd("%squeues", []byte(queue))
 		return
 }
 
@@ -65,14 +67,14 @@ func (self *Resque) Enqueue(queue string, job *Job)(err os.Error) {
  	self.watchQueue(queue)
 	
 	outjson, _ := json.Marshal(job)
-	key := fmt.Sprintf("resque:queue:%s",queue)
+	key := fmt.Sprintf("%squeue:%s",self.Namespace,queue)
  	err = self.client.Rpush(key,outjson)
 	return
 }
 
 func (self *Resque) Reserve(queue string) (job *Job, err os.Error) {
 	//decode redis.lpop("queue:#{queue}")
-	key := fmt.Sprintf("resque:queue:%s", queue)
+	key := fmt.Sprintf("%squeue:%s", self.Namespace, queue)
 	data, err := self.client.Lpop(key)
 	if err != nil {
 		return job, err
@@ -84,7 +86,7 @@ func (self *Resque) Reserve(queue string) (job *Job, err os.Error) {
 }
 
 func (self *Resque) getStat(name string) (int, os.Error) {
-	key := fmt.Sprintf("resque:stat:%s", name)
+	key := fmt.Sprintf("%sstat:%s", self.Namespace, name)
 	val, err := self.client.Get(key)
 	strval := string(val)
 	intval, _ := strconv.Atoi(strval)
@@ -92,7 +94,7 @@ func (self *Resque) getStat(name string) (int, os.Error) {
 }
 
 func (self *Resque) getWorkers() []Worker {
-	workers, err := self.client.Smembers("resque:workers")
+	workers, err := self.client.Smembers(self.Namespace + "workers")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -109,14 +111,14 @@ func (self *Resque) getWorkers() []Worker {
 
 
 func (self *Resque) getQueues() []Queue {
-	members, err := self.client.Smembers("resque:queues")
+	members, err := self.client.Smembers(self.Namespace + "queues")
 	if err != nil {
 		fmt.Println(err)
 	}
 	var q Queue
 	qs := make([]Queue, 100)
 	for i, val := range members {
-		q = Queue{Id: i, Name: string(val)}
+		q = Queue{Id: i, Namespace: self.Namespace, Name: string(val)}
 		q.client = self.client
 		qs[i] = q
 	}
@@ -124,15 +126,30 @@ func (self *Resque) getQueues() []Queue {
 	return self.Queues[0:len(members)]
 }
 
-func NewResque(server string, port int, db int) (resque *Resque) {
+func NewResque(server string, port int, db int, namespace string) (resque *Resque) {
 	resque = new(Resque)
 	resque.Server = server
 	resque.Port = port
 	resque.Db = db
+	if len(namespace) > 0 {
+		resque.Namespace = namespace + ":"
+	} else {
+		resque.Namespace = ""
+	}
 	resque.client = new(redis.Client)
+	resque.client.Db = db
 	resque.Queues = make([]Queue, 0)
 	resque.Workers = make([]Worker, 0)
 	address := fmt.Sprintf("%s:%d", resque.Server, resque.Port)
 	resque.client.Addr = address
+	keys, err := resque.client.Keys("*")
+	if err != nil {
+		fmt.Println(err.String())
+	}
+	fmt.Println("KEYDUMP:")
+	for _,y := range keys {
+		fmt.Println("Key : ", y)
+	}
+	fmt.Println(resque)
 	return resque
 }
