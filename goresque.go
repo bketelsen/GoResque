@@ -1,7 +1,7 @@
 package goresque
 
 import (
-	redis "github.com/bketelsen/redis.go"
+	redis "github.com/hoisie/redis.go"
 	"fmt"
 	"os"
 	"strconv"
